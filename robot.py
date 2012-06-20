@@ -36,22 +36,6 @@ class LetterGrid:
     self.dev.drag((self.h - y1, x1),
         (self.h - y2, x2), delay, steps)
 
- 
-def getPage(grid):
-  url = 'http://www.scramblewithfriends-cheat.com/#results'
-  grid = re.sub(r'QU', 'Q', grid)
-  values = {'grid' : grid}
-  data = urllib.urlencode(values)
-  req = urllib2.Request(url, data)
-  response = urllib2.urlopen(req)
-  the_page = response.read()
-  return the_page
-
-def findWords(text):
-  matches = re.findall(r'title=\"(\d+) .*? data\-path="\[([\d, ]+)\]">(\w+)<',
-      text)
-  matches.sort(key=lambda k:k[2])  
-  return matches
 
 def threshold(lg, getPixel):
   b = BufferedImage(16*lg.ysize, lg.xsize, BufferedImage.TYPE_BYTE_GRAY)
@@ -89,7 +73,7 @@ def write(snap):
 def playWords(lg, words):
   for word in words:
     print 'playing %s' % word[2]
-    playWord(lg, word[1]) # re.split(r',\s*', word[1]))
+    playWord(lg, word[1])
 
 def playWord(lg, tiles):
   lg.touch(200, 540)
@@ -120,29 +104,20 @@ def doResume(lg):
 def doPause(lg):
   lg.touch(75, 50)
 
-def doSnap(lg, basename):
+def getLetters(lg, basename):
   doResume(lg)
   snap = getSnap(lg)
   doPause(lg)
   snap.writeToFile('%s.png' % basename)
   thresh = '%s-thresh.png' % basename
   doThresholdSnap(snap, lg, thresh)
-  g = toLetters(thresh, basename)
-  return boggle.findWords(g)
-
-def callOut(g):
-  text = getPage(g)
-  words = findWords(text)
-  f = open('%s-words.pickle' % basename, 'w')
-  pickle.dump(words, f)
-  f.close()
-  return words
+  return toLetters(thresh, basename)
 
 def doPlay(lg, words):
   doResume(lg)
   playWords(lg, words)
   doPause(lg)
- 
+
 def process(arg):
   print "extra arg %s" % arg
 
@@ -177,7 +152,8 @@ def main():
       doPlay(lg, words)
     if o in ("-a", "--all"):
       lg = LetterGrid(getDevice())
-      words = doSnap(lg,basename)
+      letters = getLetters(lg, basename)
+      words = boggle.findWords(g)
       doPlay(lg, words)
 
 
