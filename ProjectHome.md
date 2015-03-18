@@ -1,0 +1,1 @@
+Uses Android monkeyrunner and tesseract to play a Boggle like game.
